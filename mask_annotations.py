@@ -5,6 +5,7 @@
 # Find and Mask Annotations (small text and possibly images) in video
 
 import cv2
+import numpy as np
 import sys
 import argparse
 from masker import Masker
@@ -22,6 +23,9 @@ def main():
             help="output video file path (must be .avi)")
     
     args = arg_parser.parse_args()
+    print("")
+    print("arguments: " + str(args))
+    print("")
 
     #required arguments
     input_movie_file_path = args.input
@@ -30,24 +34,30 @@ def main():
     #optional arguments, see defaults above
     output_movie_file_path = args.output
 
-    if not (output_movie_file_path == None):
-        videoWriter = setupVideoWriter(videoCapture, output_movie_file_path)
+    vid_cap = cv2.VideoCapture(input_movie_file_path)
 
-    videoCapture = cv2.VideoCapture(input_movie_file_path)
-    if not videoCapture.isOpened():
+    if not (output_movie_file_path == None):
+        vid_writer = setup_vid_writer(vid_cap, output_movie_file_path)
+
+    if not vid_cap.isOpened():
         print("Could not open " + input_movie_file_path + " movie. Exiting")
 
     #Strategy Design Patter; initialize the appropriate masker 
     masker = getMasker(type_of_mask)
 
     #read the video, frame by frame until the video is not opened or we can't read anymore
-    while (videoCapture.isOpened() == True):
-        ret, frame = videoCapture.read()
+    mask_sizes = list()
+    mask_times = list()
+    while (vid_cap.isOpened() == True):
+        ret, frame = vid_cap.read()
         if (ret == True):
-            masked_frame = masker.maskImageAnnotations(frame)
+            masked_frame = masker.mask_img_annotations(frame)
+
+            mask_sizes.append(masker.get_mask_size(masked_frame))
+            mask_times.append(masker.performance)
 
             if not (output_movie_file_path == None):
-                videoWriter.write(frame)
+                vid_writer.write(masked_frame)
 
             cv2.imshow("Original", frame)
             cv2.imshow("Mask", masked_frame)
@@ -56,32 +66,37 @@ def main():
             break
 
     #Release the video objects when everything is done
-    videoCapture.release()
+    vid_cap.release()
     if not (output_movie_file_path == None):
-        videoWriter.release()
+        vid_writer.release()
 
     #Close all frames
     cv2.destroyAllWindows()
 
+    print("Avg mask size: " + str(np.average(mask_sizes)) + " pixels")
+    print("Avg mask time: " + str(np.average(mask_times)) + " seconds")
 
-def setupVideoWriter(videoCapture, output_movie_file_path):
+
+def setup_vid_writer(videoCapture, output_movie_file_path):
     # VideoWriter settings (Codec help: https://gist.github.com/takuma7/44f9ecb028ff00e2132e)
-    videoWriter = cv2.VideoWriter()
+    vid_writer = cv2.VideoWriter()
     videoCodec = cv2.VideoWriter_fourcc('M','J','P','G')
     fps = 20
     frame_width = int(videoCapture.get(3))
     frame_height = int(videoCapture.get(4))
     frame_shape = (frame_width, frame_height)
-    videoWriter.open(
+    vid_writer.open(
             output_movie_file_path, 
             videoCodec,
             fps, 
             frame_shape)
+    return vid_writer
 
 
 def getMasker(type_of_mask):
     #Get the appropriate masker: no very memory efficient but easy to read
     '''
+    #PRIORITIZE: stuff we haven't done much-of: template matching, feature matching, advanced (i.e. the book's solution) & combo color + morphology
     maskers = {'basic' : BasicMasker(),
             'color' : ColorMasker(),
             'morphology' : MorphMasker(),

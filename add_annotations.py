@@ -1,5 +1,4 @@
 #!/usr/bin/python2
-
 #@author Brandon Tarney
 #@since 11/22/2017
 

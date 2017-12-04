@@ -14,6 +14,7 @@ from color_masker import ColorMasker
 from edge_masker import EdgeMasker
 from morph_masker import MorphMasker
 from combo_masker import ComboMasker
+from template_masker import TemplateMasker
 
 
 def main():
@@ -58,7 +59,8 @@ def main():
             'color' : ColorMasker("Color Masker", "green") ,
             'edge' : EdgeMasker("Edge & Threshold Masker"),
             'morph' : MorphMasker("Morphology Masker"),
-            'combo' : ComboMasker("Combo Masker") 
+            'combo' : ComboMasker("Combo Masker"),
+            'template' : TemplateMasker("Template Masker") 
             }
     masker = maskers.get(type_of_mask)
 

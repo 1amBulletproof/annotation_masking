@@ -33,13 +33,25 @@ class MorphMasker(Masker):
         #Adaptive threshold to control for different lighting but this will produce noise!
         threshold_mask = cv2.adaptiveThreshold(blurred_gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
                 cv2.THRESH_BINARY_INV, 7, 1)
+        '''
+        cv2.imshow("thresh", threshold_mask)
+        cv2.waitKey(0)
+        '''
 
         #Remove the noise
         kernel = np.ones((3, 3), np.uint8)
         low_noise_mask = cv2.erode(threshold_mask, kernel, iterations=2)
+        '''
+        cv2.imshow("erode", low_noise_mask)
+        cv2.waitKey(0)
+        '''
 
         #Combine the text area into word-blobs so they are large
-        mask = cv2.dilate(low_noise_mask, kernel, iterations=11)
+        mask = cv2.dilate(low_noise_mask, kernel, iterations=7)
+        '''
+        cv2.imshow("dilate", mask)
+        cv2.waitKey(0)
+        '''
 
         #Find the contours of the masked regions (this will get us word-blobs)
         contour_img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -49,7 +61,7 @@ class MorphMasker(Masker):
             # compute the bounding box for the rectangle
             (x, y, w, h) = cv2.boundingRect(contour)
             #Check for "blobs of words" which should be of decent size (which eliminates most noise!)
-            if w >= 50 and w <= 400 and h >= 30 and h <= 85: 
+            if w >= 50 and w <= 500 and h >= 40 and h <= 100: 
                 # crop the ROI and then threshold the grayscale
                 # ROI to reveal the digit
                 masked_img[y:y+h, x:x+w] = (0,0,0)

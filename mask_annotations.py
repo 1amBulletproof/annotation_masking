@@ -10,21 +10,30 @@ import sys
 import argparse
 from masker import Masker
 from basic_masker import BasicMasker
+from color_masker import ColorMasker
+from edge_masker import EdgeMasker
+from morph_masker import MorphMasker
+from combo_masker import ComboMasker
+
 
 def main():
+    #Handle input arguments
     arg_parser = argparse.ArgumentParser("find and mask annotations (small text and possibly images) in video")
+    arg_parser._action_groups.pop()
+    required = arg_parser.add_argument_group('required arguments')
+    optional = arg_parser.add_argument_group('optional arguments')
 
-    arg_parser.add_argument("-i", "--input", required=True,
-            help="input video file path")
-    arg_parser.add_argument("-t", "--type", required=True,
-            help="type of masking: basic, color, morphology, template, feature, advanced, combo",
+    required.add_argument("-i", "--input",
+            help="input video file path",required=True)
+    required.add_argument("-t", "--type", required=True,
+            help="type of masking: basic, color, edge, morphology, template, advanced, combo",
             default="basic")
-    arg_parser.add_argument("-o", "--output", required=False,
+    optional.add_argument("-o", "--output", required=False,
             help="output video file path (must be .avi)")
     
     args = arg_parser.parse_args()
     print("")
-    print("arguments: " + str(args))
+    print("input arguments: " + str(args))
     print("")
 
     #required arguments
@@ -34,6 +43,7 @@ def main():
     #optional arguments, see defaults above
     output_movie_file_path = args.output
 
+    #Setup Video read/write
     vid_cap = cv2.VideoCapture(input_movie_file_path)
 
     if not (output_movie_file_path == None):
@@ -42,8 +52,15 @@ def main():
     if not vid_cap.isOpened():
         print("Could not open " + input_movie_file_path + " movie. Exiting")
 
-    #Strategy Design Patter; initialize the appropriate masker 
-    masker = getMasker(type_of_mask)
+    #Strategy Design Pattern: initialize the appropriate masker 
+    maskers = { 
+            'basic' : BasicMasker("Basic Masker"),
+            'color' : ColorMasker("Color Masker", "green") ,
+            'edge' : EdgeMasker("Edge & Threshold Masker"),
+            'morph' : MorphMasker("Morphology Masker"),
+            'combo' : ComboMasker("Combo Masker") 
+            }
+    masker = maskers.get(type_of_mask)
 
     #read the video, frame by frame until the video is not opened or we can't read anymore
     mask_sizes = list()
@@ -51,10 +68,12 @@ def main():
     while (vid_cap.isOpened() == True):
         ret, frame = vid_cap.read()
         if (ret == True):
+            #Apply the mask
             masked_frame = masker.mask_img_annotations(frame)
 
+            #Get masking metrics
             mask_sizes.append(masker.get_mask_size(masked_frame))
-            mask_times.append(masker.performance)
+            mask_times.append(Masker.performance)
 
             if not (output_movie_file_path == None):
                 vid_writer.write(masked_frame)
@@ -73,6 +92,7 @@ def main():
     #Close all frames
     cv2.destroyAllWindows()
 
+    #Display masking metrics
     print("Avg mask size: " + str(np.average(mask_sizes)) + " pixels")
     print("Avg mask time: " + str(np.average(mask_times)) + " seconds")
 
@@ -91,23 +111,6 @@ def setup_vid_writer(videoCapture, output_movie_file_path):
             fps, 
             frame_shape)
     return vid_writer
-
-
-def getMasker(type_of_mask):
-    #Get the appropriate masker: no very memory efficient but easy to read
-    '''
-    #PRIORITIZE: stuff we haven't done much-of: template matching, feature matching, advanced (i.e. the book's solution) & combo color + morphology
-    maskers = {'basic' : BasicMasker(),
-            'color' : ColorMasker(),
-            'morphology' : MorphMasker(),
-            'template' : TemplateMasker(),
-            'feature' : FeatureMasker(),
-            'advanced' : AdvancedMasker(),
-            'combo' : ComboMasker() }
-    return maskers.get(type_of_mask)
-            '''
-    maskers = { 'basic' : BasicMasker("Basic Masker") }
-    return maskers.get(type_of_mask)
 
 
 if __name__ == "__main__":

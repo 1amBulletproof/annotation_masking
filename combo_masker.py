@@ -2,44 +2,34 @@
 #@Author Brandon Tarney
 #@Since  11/30/2017
 
-#Combo masking: combine color masking and edge detection masks
+#Combo masking: combine color masking and morph detection masks
 
 from masker import Masker
+from color_masker import ColorMasker
+from morph_masker import MorphMasker
 import cv2
 import time
 
 class ComboMasker(Masker):
-    def __init__(self, name):
+    def __init__(self, name="ComboMasker"):
         self.name = name
 
 
+    #Use color_masker + morph_masker & combine images
     def mask_img_annotations(self, img):
         start_time = time.time()
-        masked_img = img.copy()
-        color_mask = self.get_color_mask(masked_img)
-        edge_mask = self.get_edge_mask(masked_img)
-        final_mask = cv2.bitwise_and(color_mask,
-                edge_mask)
-        final_img = self.apply_mask_to_img(final_mask, masked_img)
+        color_masked_img  = img.copy()
+        color_masker = ColorMasker("Color Masker", "green")
+        color_masked_img = color_masker.mask_img_annotations(img)
+        morph_masked_img  = img.copy()
+        morph_masker = MorphMasker()
+        morph_masked_img = morph_masker.mask_img_annotations(img)
+
+        combined_mask_img = cv2.bitwise_or( color_masked_img,
+                morph_masked_img)
         end_time = time.time()
         Masker.performance = (end_time - start_time)
-        return final_masked_img
+        return combined_mask_img
 
 
-    def get_color_mask(self, img):
-        masked_img = img.copy()
-        #cv2.threshold(value) or cv2.inRange(color1, color2)
-        return masked_img
-
-
-    def get_edge_mask(self, img):
-        masked_img = img.copy()
-        #cv2.filter(SOVEL) (just horizontal tho)
-        #cv2.filter(CANNY) (compare this to the above?)
-        return masked_img
-
-
-    def apply_mask_to_img(self, mask, img):
-        #make a '1's BLACK in the final img
-        return img
 

@@ -10,9 +10,9 @@ import cv2
 import time
 
 class BasicMasker(Masker):
-    def __init__(self, name):
+    def __init__(self, name="BasicMasker"):
         self.name = name
-        self.performance = 0
+
 
     def mask_img_annotations(self, img):
         start_time = time.time()
@@ -24,28 +24,33 @@ class BasicMasker(Masker):
         self.set_right_rectangle(masked_img)
         self.set_bottom_rectangle(masked_img)
         end_time = time.time()
-        self.performance = (end_time - start_time)
+        Masker.performance = (end_time - start_time)
         return masked_img
+
 
     def set_top_rectangle(self, img):
         upper_left = (0,0)
         lower_right = ( self.img_x_dim, self.img_y_dim/5 )
         self.set_rectangle(img, upper_left, lower_right)
 
+
     def set_left_rectangle(self, img):
         upper_left = (0,0)
         lower_right = ( self.img_x_dim/5, self.img_y_dim )
         self.set_rectangle(img, upper_left, lower_right)
+
 
     def set_right_rectangle(self, img):
         upper_left = (self.img_x_dim - self.img_x_dim/5, 0)
         lower_right = ( self.img_x_dim, self.img_y_dim )
         self.set_rectangle(img, upper_left, lower_right)
 
+
     def set_bottom_rectangle(self, img):
         upper_left = (0, self.img_y_dim - self.img_y_dim/5)
         lower_right = ( self.img_x_dim, self.img_y_dim )
         self.set_rectangle(img, upper_left, lower_right)
+
 
     def set_rectangle(self, img, pt1, pt2):
         rect_thickness = -1 # filled

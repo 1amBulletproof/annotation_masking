@@ -10,17 +10,22 @@ import argparse
 
 def main():
     arg_parser = argparse.ArgumentParser("add annotations (small text and possibly images) to video")
+    arg_parser._action_groups.pop()
+    required = arg_parser.add_argument_group('required arguments')
+    optional = arg_parser.add_argument_group('optional arguments')
 
-    arg_parser.add_argument("-i", "--input", required=True,
+    required.add_argument("-i", "--input", required=True,
             help="input video file path")
-    arg_parser.add_argument("-o", "--output", required=True,
+    required.add_argument("-o", "--output", required=True,
             help="output video file path (must be .avi)")
-    arg_parser.add_argument("-a", "--annotation", required=True,
+    required.add_argument("-a", "--annotation", required=True,
             help="annotation text to add to each frame of video")
-    arg_parser.add_argument("-m", "--move", action='store_true', required=False,
+    optional.add_argument("-m", "--move", action='store_true', required=False,
             help="move the annotation throughout the video")
-    arg_parser.add_argument("-s", "--size", default=2, required=False,
+    optional.add_argument("-s", "--size", default=2, required=False,
             help="size of the annotations (generally 1-4)")
+    optional.add_argument("-c", "--color", default="255,255,255", required=False,
+            help="b,g,r value of the annotation, i.e. '-c 255,255,255' will result in white text")
     
     args = arg_parser.parse_args()
 
@@ -32,6 +37,7 @@ def main():
     #optional arguments, see defaults above
     isMoving = args.move
     text_size = int(args.size)
+    text_color = eval(args.color)
     
     videoCapture = cv2.VideoCapture(input_movie_file_path)
     videoWriter = cv2.VideoWriter()
@@ -56,10 +62,10 @@ def main():
     while (videoCapture.isOpened() == True):
         ret, frame = videoCapture.read()
         if (ret == True):
-            text_color = (255, 255, 255)
+            text_thickness = 7
             text_location = getAnnotationLocation(text_location, isMoving)
             frame = cv2.putText(frame, annotation_text, text_location, 
-                    cv2.FONT_HERSHEY_SIMPLEX, text_size, text_color)
+                    cv2.FONT_HERSHEY_SIMPLEX, text_size, text_color, text_thickness)
             videoWriter.write(frame)
             cv2.imshow("frame", frame)
             cv2.waitKey(50)

@@ -38,6 +38,7 @@ class ColorMasker(Masker):
         hsv_img  = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         color_range = ColorMasker.color_range[self.color]
         mask =  cv2.inRange(hsv_img, color_range[0], color_range[1])
+        Masker.mask = cv2.bitwise_not(mask)
         return mask
 
 

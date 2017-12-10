@@ -72,6 +72,7 @@ def main():
         if (ret == True):
             #Apply the mask
             masked_frame = masker.mask_img_annotations(frame)
+            mask = masker.mask
 
             #Get masking metrics
             mask_sizes.append(masker.get_mask_size(masked_frame))
@@ -81,7 +82,9 @@ def main():
                 vid_writer.write(masked_frame)
 
             cv2.imshow("Original", frame)
-            cv2.imshow("Mask", masked_frame)
+            cv2.imshow("Masked Original", masked_frame)
+            if mask is not None:
+                cv2.imshow("Mask", mask)
             cv2.waitKey(50)
         else:
             break
@@ -113,7 +116,6 @@ def setup_vid_writer(videoCapture, output_movie_file_path):
             fps, 
             frame_shape)
     return vid_writer
-
 
 if __name__ == "__main__":
     main()

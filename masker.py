@@ -10,6 +10,7 @@ class Masker():
 
     mask_color = (0,0,0)
     performance = 0
+    mask = None
 
 
     def __init__(self, name="SuperMasker"):
